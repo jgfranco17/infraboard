@@ -19,5 +19,5 @@ pytest *ARGS:
     pytest {{ARGS}}
 
 coverage:
-    coverage run -m pytest
+    coverage run --source=infraboard --omit="*/__init__.py,*/test_*.py" -m pytest
     coverage report
