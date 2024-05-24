@@ -6,9 +6,14 @@ from .models import SystemMetrics, TimeSeriesData
 
 
 class InfraMonitor:
+    _configured = st.set_page_config(page_title="Dashboard")
+    _count = 0
+
     def __init__(self, interval_min: int, interval_max: int) -> None:
-        if interval_min >= interval_max:
-            raise ValueError("Interval minimum must be less than interval maximum")
+        self.__validate_interval(interval_min, interval_max)
+        self._count += 1
+        if self._count > 1:
+            raise RuntimeError("Only one dashboard can be created at a time")
 
         self.__running = False
         self.__slider_max = interval_max
@@ -19,8 +24,22 @@ class InfraMonitor:
         self.historical_cpu_data = TimeSeriesData("CPU Usage")
         self.metrics = SystemMetrics()
 
+    @staticmethod
+    def __validate_interval(minimum: int, maximum: int) -> None:
+        if minimum >= maximum:
+            raise ValueError("Interval minimum must be less than interval maximum")
+        if minimum < 0:
+            raise ValueError("Interval minimum must be integer greater than 0")
+
+    @property
+    def is_running(self) -> bool:
+        return self.__running
+
     def run(self) -> None:
         print("Running system monitoring...")
+        self.__render()
+
+    def __render(self) -> None:
         self.__running = True
         st.title("Development Computer Metrics Monitor")
         placeholder = st.empty()
