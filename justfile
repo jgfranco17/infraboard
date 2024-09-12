@@ -4,22 +4,29 @@ default:
 
 # Install dependencies
 install:
-    @echo "Installing project dependencies..."
-    pip install --upgrade pip
-    pip install -r requirements.txt
-    @echo "All Python dependencies installed!"
+    #!/usr/bin/env bash
+    echo "Installing project dependencies..."
+    if ! command -v poetry &> /dev/null
+    then
+        echo "Poetry has not been installed."
+        echo "Please install with `pip install poetry` to continue"
+        exit 1
+    fi
+    poetry install
+    poetry shell
+    echo "All Python dependencies installed!"
 
 # Start the dashboard server
 run port:
     @echo "Starting service monitoring app!"
-    streamlit run main.py --server.port {{ port }}
+    poetry run streamlit run main.py --server.port {{ port }}
 
 # Run pytest suite
 pytest *ARGS:
     @echo "Running PyTest..."
-    pytest {{ARGS}}
+    poetry run pytest {{ARGS}}
 
 # Get code coverage report
 coverage:
-    coverage run --source=infraboard --omit="*/__init__.py,*/test_*.py" -m pytest
-    coverage report
+    poetry run coverage run --source=infraboard --omit="*/__init__.py,*/test_*.py" -m pytest
+    poetry run coverage report

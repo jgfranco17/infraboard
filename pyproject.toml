@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "infraboard"
+version = "0.1.0"
+description = "Python dashboard for viewing environment infrastructure"
+authors = ["Joaquin Franco <chino.franco@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+matplotlib = "^3.9.2"
+psutil = "^6.0.0"
+streamlit = "^1.38.0"
+
+[tool.poetry.group.dev.dependencies]
+coverage = "^7.6.1"
+pytest = "^8.3.3"
+selenium = "^4.24.0"
+pre-commit = "^3.8.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
