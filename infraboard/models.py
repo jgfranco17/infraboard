@@ -8,11 +8,11 @@ import psutil
 @dataclass
 class SystemMetrics:
     def __init__(self) -> None:
-        self.cpu_usage: int = 0
-        self.memory_usage: int = 0
-        self.disk_usage: int = 0
-        self.bytes_sent: float = 0
-        self.bytes_received: float = 0
+        self.cpu_usage = 0
+        self.memory_usage = 0
+        self.disk_usage = 0
+        self.bytes_sent = 0.0
+        self.bytes_received = 0.0
 
     def update(self):
         self.cpu_usage = psutil.cpu_percent(interval=1)
