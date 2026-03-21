@@ -1,9 +1,11 @@
+from unittest.mock import patch
+
 import pytest
 
 from infraboard import InfraMonitor
 
 
-def test_app_initialization_valid():
+def test_app_initialization_valid(mock_st):
     app = InfraMonitor(1, 10)
     assert not app.is_running, "App should not be running on initialization"
     assert app.metrics.cpu_usage == 0, f"Metric 'cpu_usage' was not 0 on initialization"
@@ -24,6 +26,48 @@ def test_app_initialization_valid():
 
 
 @pytest.mark.parametrize("minimum,maximum", [(1, 1), (100, 1), (-1, 10)])
-def test_raise_exception_invalid_interval(minimum: int, maximum: int):
+def test_raise_exception_invalid_interval(minimum: int, maximum: int, mock_st):
     with pytest.raises(ValueError):
         _ = InfraMonitor(minimum, maximum)
+
+
+def test_initialization_registers_slider(mock_st):
+    """Slider is created with the correct min/max bounds from the constructor."""
+    InfraMonitor(2, 30)
+    mock_st.sidebar.slider.assert_called_once_with("Refresh interval (seconds)", 2, 30)
+
+
+def test_run_exits_cleanly_on_keyboard_interrupt(mock_st, mock_psutil):
+    """run() handles KeyboardInterrupt and leaves is_running as False."""
+    app = InfraMonitor(1, 10)
+    with patch("infraboard.monitor.time") as mock_time:
+        mock_time.strftime.return_value = "12:00:00"
+        mock_time.sleep.side_effect = KeyboardInterrupt()
+        app.run()
+
+    assert not app.is_running
+
+
+def test_run_updates_historical_cpu_data(mock_st, mock_psutil):
+    """run() records a CPU timestamp entry for each loop iteration."""
+    app = InfraMonitor(1, 10)
+    with patch("infraboard.monitor.time") as mock_time:
+        mock_time.strftime.return_value = "12:00:00"
+        mock_time.sleep.side_effect = KeyboardInterrupt()
+        app.run()
+
+    assert len(app.historical_cpu_data.timestamps) == 1
+    assert app.historical_cpu_data.timestamps[0] == "12:00:00"
+    assert app.historical_cpu_data.data[0] == mock_psutil.cpu_percent.return_value
+
+
+def test_run_renders_metrics_to_streamlit(mock_st, mock_psutil):
+    """run() calls st.metric for each metric and st.line_chart once per iteration."""
+    app = InfraMonitor(1, 10)
+    with patch("infraboard.monitor.time") as mock_time:
+        mock_time.strftime.return_value = "12:00:00"
+        mock_time.sleep.side_effect = KeyboardInterrupt()
+        app.run()
+
+    assert mock_st.metric.call_count == 5
+    mock_st.line_chart.assert_called_once()

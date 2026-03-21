@@ -1,4 +1,4 @@
-name: Pre-commit
+name: Compliance Checks
 
 on:
   push:
@@ -8,19 +8,14 @@ on:
 
 jobs:
   pre-commit:
+    name: Run pre-commit
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Set up Python
+      - name: Set up workspace
         uses: ./.github/actions/setup-workspace
-        with:
-          for-testing: true
-          python-version: "3.10"
 
       - name: Install pre-commit
         run: pip install pre-commit
