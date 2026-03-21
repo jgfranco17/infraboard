@@ -1,12 +1,17 @@
+import logging
 import time
 from typing import Optional
 
 import streamlit as st
 
-from .models import SystemMetrics, TimeSeriesData
+from infraboard.models import SystemMetrics, TimeSeriesData
+
+logger = logging.getLogger(__name__)
 
 
 class InfraMonitor:
+    """Class to monitor system metrics and display them in a Streamlit dashboard."""
+
     _configured = st.set_page_config(layout="wide", page_title="Dashboard")
     _count = 0
 
@@ -37,11 +42,11 @@ class InfraMonitor:
         return self.__running
 
     def run(self) -> None:
-        print("Running system monitoring...")
+        logger.info("Running system monitoring")
         self.__render()
 
     @staticmethod
-    def __bytes_to_mb(bytes: int, precision: Optional[int] = 2) -> float:
+    def __bytes_to_mb(bytes: float | int, precision: Optional[int] = 2) -> float:
         return round(bytes / (1024 * 1024), precision)
 
     def __render(self) -> None:
@@ -72,6 +77,6 @@ class InfraMonitor:
                 time.sleep(self.__refresh_interval)
 
             except KeyboardInterrupt:
-                print("Manual shutdown signal received, exiting...")
+                logger.warning("Manual shutdown signal received, exiting...")
                 self.__running = False
                 break
