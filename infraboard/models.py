@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Any
 
 import pandas as pd
 import psutil
@@ -30,7 +29,7 @@ class TimeSeriesData:
         self.data = []
         self.__title = metric
 
-    def update(self, timestamp: str, data: Any) -> None:
+    def update(self, timestamp: str, data: object) -> None:
         self.timestamps.append(timestamp)
         self.data.append(data)
 

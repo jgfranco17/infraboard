@@ -20,4 +20,5 @@ dev = [
     "pylint>=4.0.5",
     "pytest>=9.0.2",
     "selenium>=4.41.0",
+    "pandas-stubs~=2.3.3",
 ]
