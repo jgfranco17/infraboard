@@ -21,9 +21,7 @@ def mock_psutil() -> Iterator[MagicMock]:
         mock.cpu_percent.return_value = 45.0
         mock.virtual_memory.return_value = MagicMock(percent=60.0)
         mock.disk_usage.return_value = MagicMock(percent=70.0)
-        mock.net_io_counters.return_value = MagicMock(
-            bytes_sent=1_048_576, bytes_recv=2_097_152
-        )
+        mock.net_io_counters.return_value = MagicMock(bytes_sent=1_048_576, bytes_recv=2_097_152)
         yield mock
 
 

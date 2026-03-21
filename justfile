@@ -29,3 +29,9 @@ pytest *args:
 coverage:
     uv run coverage run --source=infraboard --omit="*/__init__.py,*/test_*.py" -m pytest
     uv run coverage report
+
+# Run linters
+lint:
+    uv run black --target-version=py313 .
+    uv run isort .
+    @echo "Project workspace linted!"

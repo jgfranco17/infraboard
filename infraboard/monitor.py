@@ -65,9 +65,7 @@ class InfraMonitor:
                     st.metric("CPU Usage (%)", self.metrics.cpu_usage)
                     st.metric("Memory Usage (%)", self.metrics.memory_usage)
                     st.metric("Disk Usage (%)", self.metrics.disk_usage)
-                    st.metric(
-                        "Data Sent (MB)", self.__bytes_to_mb(self.metrics.bytes_sent)
-                    )
+                    st.metric("Data Sent (MB)", self.__bytes_to_mb(self.metrics.bytes_sent))
                     st.metric(
                         "Data Received (MB)",
                         self.__bytes_to_mb(self.metrics.bytes_received),
