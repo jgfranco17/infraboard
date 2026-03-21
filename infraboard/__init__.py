@@ -1,1 +1,1 @@
-from .monitor import InfraMonitor
+from infraboard.monitor import InfraMonitor

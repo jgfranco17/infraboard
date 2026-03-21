@@ -1,59 +1,34 @@
-import psutil
+from typing import Iterator
+from unittest.mock import MagicMock, patch
+
 import pytest
+
+from infraboard.models import TimeSeriesData
 
 
 @pytest.fixture
-def mock_psutil(monkeypatch):
-    # Mocking the return values for psutil methods
-    monkeypatch.setattr(psutil, "cpu_percent", lambda interval: 10)
-    monkeypatch.setattr(psutil, "getloadavg", lambda: (1.0, 0.5, 0.25))
-    monkeypatch.setattr(
-        psutil,
-        "virtual_memory",
-        lambda: psutil._pslinux.svmem(
-            total=8000,
-            available=2000,
-            percent=75,
-            used=6000,
-            free=2000,
-            active=3000,
-            inactive=1000,
-            buffers=500,
-            cached=1000,
-            shared=200,
-            slab=300,
-        ),
-    )
-    monkeypatch.setattr(
-        psutil,
-        "disk_io_counters",
-        lambda: psutil._common.sdiskio(
-            read_count=100,
-            write_count=50,
-            read_bytes=1024,
-            write_bytes=2048,
-            read_time=5,
-            write_time=3,
-        ),
-    )
-    monkeypatch.setattr(
-        psutil,
-        "disk_usage",
-        lambda path: psutil._common.sdiskusage(
-            total=100000, used=75000, free=25000, percent=75
-        ),
-    )
-    monkeypatch.setattr(
-        psutil,
-        "net_io_counters",
-        lambda: psutil._common.snetio(
-            bytes_sent=5000,
-            bytes_recv=8000,
-            packets_sent=50,
-            packets_recv=100,
-            errin=0,
-            errout=0,
-            dropin=0,
-            dropout=0,
-        ),
-    )
+def mock_streamlit() -> Iterator[MagicMock]:
+    """Patch Streamlit to isolate tests from the Streamlit runtime."""
+    with patch("infraboard.monitor.st") as mock:
+        mock.sidebar.slider.return_value = 5
+        yield mock
+
+
+@pytest.fixture
+def mock_psutil() -> Iterator[MagicMock]:
+    """Patch psutil with controlled system metric values."""
+    with patch("infraboard.models.psutil") as mock:
+        mock.cpu_percent.return_value = 45.0
+        mock.virtual_memory.return_value = MagicMock(percent=60.0)
+        mock.disk_usage.return_value = MagicMock(percent=70.0)
+        mock.net_io_counters.return_value = MagicMock(bytes_sent=1_048_576, bytes_recv=2_097_152)
+        yield mock
+
+
+@pytest.fixture
+def sample_ts_data() -> TimeSeriesData:
+    """A TimeSeriesData instance pre-populated with two CPU readings."""
+    ts = TimeSeriesData(metric="CPU_Usage")
+    ts.update("2024-05-23 12:00:00", 20.5)
+    ts.update("2024-05-23 12:01:00", 22.0)
+    return ts

@@ -1,32 +1,37 @@
 # Print list of available recipe (this)
-default:
-    @just --list
+_default:
+    @just --list --unsorted
 
 # Install dependencies
 install:
     #!/usr/bin/env bash
     echo "Installing project dependencies..."
-    if ! command -v poetry &> /dev/null
+    if ! command -v uv &> /dev/null
     then
         echo "Poetry has not been installed."
-        echo "Please install with `pip install poetry` to continue"
+        echo "Please install with `pip install uv` to continue"
         exit 1
     fi
-    poetry install
-    poetry shell
+    uv sync
     echo "All Python dependencies installed!"
 
 # Start the dashboard server
 run port:
     @echo "Starting service monitoring app!"
-    poetry run streamlit run main.py --server.port {{ port }}
+    uv run streamlit run main.py --server.port {{ port }}
 
 # Run pytest suite
-pytest *ARGS:
+pytest *args:
     @echo "Running PyTest..."
-    poetry run pytest {{ARGS}}
+    @uv run pytest {{ args }}
 
 # Get code coverage report
 coverage:
-    poetry run coverage run --source=infraboard --omit="*/__init__.py,*/test_*.py" -m pytest
-    poetry run coverage report
+    uv run coverage run --source=infraboard --omit="*/__init__.py,*/test_*.py" -m pytest
+    uv run coverage report
+
+# Run linters
+lint:
+    uv run black --target-version=py313 .
+    uv run isort .
+    @echo "Project workspace linted!"
