@@ -3,7 +3,15 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from infraboard import InfraMonitor
 from infraboard.models import TimeSeriesData
+
+
+@pytest.fixture(autouse=True)
+def reset_monitor_count() -> Iterator[None]:
+    """Reset InfraMonitor._count between tests to allow independent dashboard creation."""
+    yield
+    InfraMonitor._count = 0
 
 
 @pytest.fixture

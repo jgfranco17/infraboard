@@ -1,3 +1,4 @@
+import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -63,3 +64,63 @@ def test_run_renders_metrics_to_streamlit(mock_streamlit: MagicMock, mock_psutil
 
     assert mock_streamlit.metric.call_count == 5
     mock_streamlit.line_chart.assert_called_once()
+
+
+def test_second_dashboard_raises_runtime_error(mock_streamlit: MagicMock):
+    """Creating a second InfraMonitor raises RuntimeError."""
+    InfraMonitor(1, 10)
+    with pytest.raises(RuntimeError, match="Only one dashboard can be created at a time"):
+        InfraMonitor(1, 10)
+
+
+@pytest.mark.parametrize(
+    "bytes_sent,bytes_received,expected_sent,expected_received",
+    [
+        (0, 0, 0.0, 0.0),
+        (1_048_576, 2_097_152, 1.0, 2.0),
+        (10_485_760, 5_242_880, 10.0, 5.0),
+        (524_288, 262_144, 0.5, 0.25),
+    ],
+)
+def run_renders_bytes_to_mb_correctly(
+    bytes_sent, bytes_received, expected_sent, expected_received, mock_streamlit, mock_psutil
+):
+    """st.metric receives the correct MB-converted values for network data."""
+    mock_psutil.net_io_counters.return_value = MagicMock(
+        bytes_sent=bytes_sent, bytes_recv=bytes_received
+    )
+    app = InfraMonitor(1, 10)
+    with patch("infraboard.monitor.time") as mock_time:
+        mock_time.strftime.return_value = "12:00:00"
+        mock_time.sleep.side_effect = KeyboardInterrupt()
+        app.run()
+
+    metric_calls = mock_streamlit.metric.call_args_list
+    assert metric_calls[3][0][0] == "Data Sent (MB)"
+    assert metric_calls[3][0][1] == expected_sent
+    assert metric_calls[4][0][0] == "Data Received (MB)"
+    assert metric_calls[4][0][1] == expected_received
+
+
+def test_run_logs_info_on_start(mock_streamlit, mock_psutil, caplog):
+    """run() logs an info message when starting."""
+    app = InfraMonitor(1, 10)
+    with patch("infraboard.monitor.time") as mock_time:
+        mock_time.strftime.return_value = "12:00:00"
+        mock_time.sleep.side_effect = KeyboardInterrupt()
+        with caplog.at_level(logging.INFO, logger="infraboard.monitor"):
+            app.run()
+
+    assert any(record.levelname == "INFO" for record in caplog.records)
+
+
+def test_run_logs_warning_on_keyboard_interrupt(mock_streamlit, mock_psutil, caplog):
+    """run() logs a warning when KeyboardInterrupt is received."""
+    app = InfraMonitor(1, 10)
+    with patch("infraboard.monitor.time") as mock_time:
+        mock_time.strftime.return_value = "12:00:00"
+        mock_time.sleep.side_effect = KeyboardInterrupt()
+        with caplog.at_level(logging.WARNING, logger="infraboard.monitor"):
+            app.run()
+
+    assert any(record.levelname == "WARNING" for record in caplog.records)

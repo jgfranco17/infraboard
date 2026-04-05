@@ -17,7 +17,7 @@ class InfraMonitor:
 
     def __init__(self, interval_min: int, interval_max: int) -> None:
         self.__validate_interval(interval_min, interval_max)
-        self._count += 1
+        InfraMonitor._count += 1
         if self._count > 1:
             raise RuntimeError("Only one dashboard can be created at a time")
 
